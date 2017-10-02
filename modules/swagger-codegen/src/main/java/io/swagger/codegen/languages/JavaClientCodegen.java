@@ -50,6 +50,7 @@ public class JavaClientCodegen extends AbstractJavaCodegen
 
     public JavaClientCodegen() {
         super();
+
         outputFolder = "generated-code" + File.separator + "java";
         embeddedTemplateDir = templateDir = "Java";
         invokerPackage = "io.swagger.client";
@@ -77,6 +78,7 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         supportedLibraries.put("resttemplate", "HTTP client: Spring RestTemplate 4.3.9-RELEASE. JSON processing: Jackson 2.8.9");
         supportedLibraries.put("resteasy", "HTTP client: Resteasy client 3.1.3.Final. JSON processing: Jackson 2.8.9");
         supportedLibraries.put("vertx", "HTTP client: VertX client 3.2.4. JSON processing: Jackson 2.8.9");
+        supportedLibraries.put("reactor", "HTTP client: Spring Reactor. JSON processing: Jackson 2.8.9");
 
         CliOption libraryOption = new CliOption(CodegenConstants.LIBRARY, "library template (sub-template) to use");
         libraryOption.setEnum(supportedLibraries);
@@ -235,7 +237,16 @@ public class JavaClientCodegen extends AbstractJavaCodegen
             apiTemplateFiles.put("apiImpl.mustache", "Impl.java");
             apiTemplateFiles.put("rxApiImpl.mustache", ".java");
             supportingFiles.remove(new SupportingFile("manifest.mustache", projectFolder, "AndroidManifest.xml"));
-        } else {
+        } else if("reactor".equals(getLibrary())) {
+            setJava8Mode(true);
+            setDateLibrary("java8");
+            setUseRuntimeException(true);
+            additionalProperties.put("java8", "true");
+            additionalProperties.put("jackson", "true");
+            supportingFiles.add(new SupportingFile("JSON.mustache", invokerFolder, "JSON.java"));
+        }
+
+        else {
             LOGGER.error("Unknown library option (-l/--library): " + getLibrary());
         }
 
@@ -279,6 +290,7 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         }
 
         if (additionalProperties.containsKey("jackson")) {
+            System.out.println("DATELIBRARY:: " + dateLibrary);
             supportingFiles.add(new SupportingFile("RFC3339DateFormat.mustache", invokerFolder, "RFC3339DateFormat.java"));
             if ("threetenbp".equals(dateLibrary) && !usePlayWS) {
                 supportingFiles.add(new SupportingFile("CustomInstantDeserializer.mustache", invokerFolder, "CustomInstantDeserializer.java"));

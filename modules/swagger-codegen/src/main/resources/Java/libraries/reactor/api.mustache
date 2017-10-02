@@ -1,0 +1,142 @@
+{{>licenseInfo}}
+package {{package}};
+
+import {{invokerPackage}}.ApiException;
+import {{invokerPackage}}.ApiClient;
+import {{invokerPackage}}.Configuration;
+import {{modelPackage}}.*;
+import {{invokerPackage}}.Pair;
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+
+{{^fullJavaUtil}}
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+{{/fullJavaUtil}}
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+{{>generatedAnnotation}}
+{{#operations}}
+public class {{classname}} {
+  private ApiClient {{localVariablePrefix}}apiClient;
+
+  public {{classname}}() {
+    this(Configuration.getDefaultApiClient());
+  }
+
+  public {{classname}}(ApiClient apiClient) {
+    this.{{localVariablePrefix}}apiClient = apiClient;
+  }
+
+  public ApiClient getApiClient() {
+    return {{localVariablePrefix}}apiClient;
+  }
+
+  public void setApiClient(ApiClient apiClient) {
+    this.{{localVariablePrefix}}apiClient = apiClient;
+  }
+
+  {{#operation}}
+  /**
+   * {{summary}}
+   * {{notes}}
+   {{#allParams}}
+   * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{#defaultValue}}, default to {{{.}}}{{/defaultValue}}){{/required}}
+   {{/allParams}}
+   {{#returnType}}
+   * @return {{returnType}}
+   {{/returnType}}
+   {{#isDeprecated}}
+   * @Deprecated
+   {{/isDeprecated}}
+   {{#externalDocs}}
+   * {{description}}
+   * @see <a href="{{url}}">{{summary}} Documentation</a>
+   {{/externalDocs}}
+   */
+  public {{#returnType}}{{#returnContainer}}Flux<{{{returnBaseType}}}>{{/returnContainer}}{{^returnContainer}}Mono<{{{returnBaseType}}}>{{/returnContainer}} {{/returnType}}{{^returnType}}Mono<Void> {{/returnType}}{{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) {
+    Object {{localVariablePrefix}}localVarPostBody = {{#bodyParam}}{{paramName}}{{/bodyParam}}{{^bodyParam}}null{{/bodyParam}};
+    {{#allParams}}{{#required}}
+    // verify the required parameter '{{paramName}}' is set
+    if ({{paramName}} == null) {
+        return {{#returnContainer}}Flux{{/returnContainer}}{{^returnContainer}}Mono{{/returnContainer}}.error(new ApiException(400, "Missing the required parameter '{{paramName}}' when calling {{operationId}}"));
+    }
+    {{/required}}{{/allParams}}
+    // create path and map variables
+    {{javaUtilPrefix}}Map<String, Object> {{localVariablePrefix}}localVarUriVariables = new {{javaUtilPrefix}}HashMap<String, Object>();
+    {{#pathParams}}
+    {{localVariablePrefix}}localVarUriVariables.put("{{baseName}}", {{{paramName}}});
+    {{/pathParams}}
+    String {{localVariablePrefix}}localVarPath = "{{{path}}}";
+    //String {{localVariablePrefix}}localVarPath = "{{{path}}}"{{#pathParams}}
+    //  .replaceAll("\\{" + "{{baseName}}" + "\\}", {{localVariablePrefix}}apiClient.escapeString({{{paramName}}}.toString())){{/pathParams}};
+
+    // query params
+    {{javaUtilPrefix}}List<Pair> {{localVariablePrefix}}localVarQueryParams = new {{javaUtilPrefix}}ArrayList<Pair>();
+    {{javaUtilPrefix}}Map<String, String> {{localVariablePrefix}}localVarHeaderParams = new {{javaUtilPrefix}}HashMap<String, String>();
+    {{javaUtilPrefix}}Map<String, Object> {{localVariablePrefix}}localVarFormParams = new {{javaUtilPrefix}}HashMap<String, Object>();
+
+    {{#queryParams}}
+    {{localVariablePrefix}}localVarQueryParams.addAll({{localVariablePrefix}}apiClient.parameterToPairs("{{#collectionFormat}}{{{collectionFormat}}}{{/collectionFormat}}", "{{baseName}}", {{paramName}}));
+    {{/queryParams}}
+
+    {{#headerParams}}if ({{paramName}} != null)
+      {{localVariablePrefix}}localVarHeaderParams.put("{{baseName}}", {{localVariablePrefix}}apiClient.parameterToString({{paramName}}));
+    {{/headerParams}}
+
+    {{#formParams}}if ({{paramName}} != null)
+      {{localVariablePrefix}}localVarFormParams.put("{{baseName}}", {{paramName}});
+    {{/formParams}}
+
+    final String[] {{localVariablePrefix}}localVarAccepts = {
+      {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}}
+    };
+    final String {{localVariablePrefix}}localVarAccept = {{localVariablePrefix}}apiClient.selectHeaderAccept({{localVariablePrefix}}localVarAccepts);
+
+    final String[] {{localVariablePrefix}}localVarContentTypes = {
+      {{#consumes}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/consumes}}
+    };
+    final String {{localVariablePrefix}}localVarContentType = {{localVariablePrefix}}apiClient.selectHeaderContentType({{localVariablePrefix}}localVarContentTypes);
+
+    String[] {{localVariablePrefix}}localVarAuthNames = new String[] { {{#authMethods}}"{{name}}"{{#hasMore}}, {{/hasMore}}{{/authMethods}} };
+
+    return apiClient.invokeAPI(
+        {{localVariablePrefix}}localVarPath,
+        "{{httpMethod}}",
+        {{localVariablePrefix}}localVarUriVariables,
+        {{localVariablePrefix}}localVarQueryParams,
+        {{localVariablePrefix}}localVarPostBody,
+        {{localVariablePrefix}}localVarHeaderParams,
+        {{localVariablePrefix}}localVarFormParams,
+        {{localVariablePrefix}}localVarAccept,
+        {{localVariablePrefix}}localVarContentType,
+        {{localVariablePrefix}}localVarAuthNames)
+        {{#returnType}}
+            {{#returnContainer}}.flatMapMany(r -> r.bodyToFlux({{returnBaseType}}.class)){{/returnContainer}}
+            {{^returnContainer}}.flatMap(r -> r.bodyToMono({{returnBaseType}}.class)){{/returnContainer}}
+        {{/returnType}}
+        {{^returnType}}
+            .then()
+        {{/returnType}}
+    ;
+
+    //return {{#returnContainer}}Flux.empty(){{/returnContainer}}{{^returnContainer}}Mono.empty(){{/returnContainer}};
+  }
+  {{/operation}}
+
+    private Mono<? extends AddBalanceResponse> response(ClientResponse response) {
+        if (!response.statusCode().is2xxSuccessful()) {
+return response.bodyToMono(String.class).flatMap(responseBody -> Mono.error(new ApiException(response.statusCode().value(), responseBody)));
+    } else {
+    return response.bodyToMono(AddBalanceResponse.class);
+    }
+    }
+
+}
+{{/operations}}
