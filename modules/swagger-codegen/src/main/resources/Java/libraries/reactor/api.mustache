@@ -1,0 +1,164 @@
+{{>licenseInfo}}
+package {{package}};
+
+import {{invokerPackage}}.ApiException;
+import {{invokerPackage}}.ApiClient;
+import {{invokerPackage}}.Configuration;
+import {{modelPackage}}.*;
+import {{invokerPackage}}.Pair;
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+
+{{^fullJavaUtil}}
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+{{/fullJavaUtil}}
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import org.springframework.web.reactive.function.client.ClientResponse;
+
+{{>generatedAnnotation}}
+{{#operations}}
+public class {{classname}} {
+  private ApiClient {{localVariablePrefix}}apiClient;
+
+  public {{classname}}() {
+    this(Configuration.getDefaultApiClient());
+  }
+
+  public {{classname}}(ApiClient apiClient) {
+    this.{{localVariablePrefix}}apiClient = apiClient;
+  }
+
+  public ApiClient getApiClient() {
+    return {{localVariablePrefix}}apiClient;
+  }
+
+  public void setApiClient(ApiClient apiClient) {
+    this.{{localVariablePrefix}}apiClient = apiClient;
+  }
+
+    private <R> Mono<? extends R> responseToSingle(ClientResponse r, Class<R> clazz) {
+        return r.statusCode().is2xxSuccessful()
+            ? r.bodyToMono(clazz)
+            : r.bodyToMono(String.class).flatMap(errorBody -> Mono.error(exceptionFrom(r,  errorBody)));
+    }
+
+    private <R> Flux<? extends R> responseToMany(ClientResponse r, Class<R> clazz) {
+        return r.statusCode().is2xxSuccessful()
+            ? r.bodyToFlux(clazz)
+            : r.bodyToFlux(String.class).flatMap(errorBody -> Flux.error(exceptionFrom(r, errorBody)));
+    }
+
+    /**
+    * Factory method to construct an ApiException from a ClientResposne
+    *
+    * @param resposne the response to extract data fromn
+    * @param errorBody the body of the error
+    * @return a filled in ApiException
+    */
+    private static ApiException exceptionFrom(ClientResponse response, String errorBody) {
+        return new ApiException(
+            response.statusCode().value(),
+            response.headers().asHttpHeaders().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())),
+            errorBody
+        );
+    }
+
+
+  {{#operation}}
+  /**
+   * {{summary}}
+   * {{notes}}
+   {{#allParams}}
+   * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{#defaultValue}}, default to {{{.}}}{{/defaultValue}}){{/required}}
+   {{/allParams}}
+   {{#returnType}}
+   * @return {{returnType}}
+   {{/returnType}}
+   {{#isDeprecated}}
+   * @Deprecated
+   {{/isDeprecated}}
+   {{#externalDocs}}
+   * {{description}}
+   * @see <a href="{{url}}">{{summary}} Documentation</a>
+   {{/externalDocs}}
+   */
+  public {{#returnType}}{{#returnContainer}}Flux<{{{returnBaseType}}}>{{/returnContainer}}{{^returnContainer}}Mono<{{{returnBaseType}}}>{{/returnContainer}} {{/returnType}}{{^returnType}}Mono<Void> {{/returnType}}{{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) {
+    Object {{localVariablePrefix}}localVarPostBody = {{#bodyParam}}{{paramName}}{{/bodyParam}}{{^bodyParam}}null{{/bodyParam}};
+    {{#allParams}}{{#required}}
+    // verify the required parameter '{{paramName}}' is set
+    if ({{paramName}} == null) {
+        return {{#returnContainer}}Flux{{/returnContainer}}{{^returnContainer}}Mono{{/returnContainer}}.error(new ApiException(400, "Missing the required parameter '{{paramName}}' when calling {{operationId}}"));
+    }
+    {{/required}}{{/allParams}}
+    // create path and map variables
+    {{javaUtilPrefix}}Map<String, Object> {{localVariablePrefix}}localVarUriVariables = new {{javaUtilPrefix}}HashMap<String, Object>();
+    {{#pathParams}}
+    {{localVariablePrefix}}localVarUriVariables.put("{{baseName}}", {{{paramName}}});
+    {{/pathParams}}
+    String {{localVariablePrefix}}localVarPath = "{{{path}}}";
+    //String {{localVariablePrefix}}localVarPath = "{{{path}}}"{{#pathParams}}
+    //  .replaceAll("\\{" + "{{baseName}}" + "\\}", {{localVariablePrefix}}apiClient.escapeString({{{paramName}}}.toString())){{/pathParams}};
+
+    // query params
+    {{javaUtilPrefix}}List<Pair> {{localVariablePrefix}}localVarQueryParams = new {{javaUtilPrefix}}ArrayList<Pair>();
+    {{javaUtilPrefix}}Map<String, String> {{localVariablePrefix}}localVarHeaderParams = new {{javaUtilPrefix}}HashMap<String, String>();
+    {{javaUtilPrefix}}Map<String, Object> {{localVariablePrefix}}localVarFormParams = new {{javaUtilPrefix}}HashMap<String, Object>();
+
+    {{#queryParams}}
+    {{localVariablePrefix}}localVarQueryParams.addAll({{localVariablePrefix}}apiClient.parameterToPairs("{{#collectionFormat}}{{{collectionFormat}}}{{/collectionFormat}}", "{{baseName}}", {{paramName}}));
+    {{/queryParams}}
+
+    {{#headerParams}}if ({{paramName}} != null)
+      {{localVariablePrefix}}localVarHeaderParams.put("{{baseName}}", {{localVariablePrefix}}apiClient.parameterToString({{paramName}}));
+    {{/headerParams}}
+
+    {{#formParams}}if ({{paramName}} != null)
+      {{localVariablePrefix}}localVarFormParams.put("{{baseName}}", {{paramName}});
+    {{/formParams}}
+
+    final String[] {{localVariablePrefix}}localVarAccepts = {
+      {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}}
+    };
+    final String {{localVariablePrefix}}localVarAccept = {{localVariablePrefix}}apiClient.selectHeaderAccept({{localVariablePrefix}}localVarAccepts);
+
+    final String[] {{localVariablePrefix}}localVarContentTypes = {
+      {{#consumes}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/consumes}}
+    };
+    final String {{localVariablePrefix}}localVarContentType = {{localVariablePrefix}}apiClient.selectHeaderContentType({{localVariablePrefix}}localVarContentTypes);
+
+    String[] {{localVariablePrefix}}localVarAuthNames = new String[] { {{#authMethods}}"{{name}}"{{#hasMore}}, {{/hasMore}}{{/authMethods}} };
+
+    return apiClient.invokeAPI(
+        {{localVariablePrefix}}localVarPath,
+        "{{httpMethod}}",
+        {{localVariablePrefix}}localVarUriVariables,
+        {{localVariablePrefix}}localVarQueryParams,
+        {{localVariablePrefix}}localVarPostBody,
+        {{localVariablePrefix}}localVarHeaderParams,
+        {{localVariablePrefix}}localVarFormParams,
+        {{localVariablePrefix}}localVarAccept,
+        {{localVariablePrefix}}localVarContentType,
+        {{localVariablePrefix}}localVarAuthNames)
+            .onErrorMap(t -> new ApiException(t))
+        {{#returnType}}
+            {{#returnContainer}}.flatMapMany(r -> responseToMany(r, {{returnBaseType}}.class)){{/returnContainer}}
+            {{^returnContainer}}.flatMap(r -> responseToSingle(r, {{returnBaseType}}.class)){{/returnContainer}}
+        {{/returnType}}
+        {{^returnType}}
+            .then()
+        {{/returnType}}
+    ;
+
+    //return {{#returnContainer}}Flux.empty(){{/returnContainer}}{{^returnContainer}}Mono.empty(){{/returnContainer}};
+  }
+  {{/operation}}
+}
+{{/operations}}
