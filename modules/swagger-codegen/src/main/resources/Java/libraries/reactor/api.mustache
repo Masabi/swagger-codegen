@@ -56,6 +56,14 @@ public class {{classname}} {
             : r.bodyToFlux(String.class).flatMap(errorBody -> Flux.error(exceptionFrom(r, errorBody)));
     }
 
+    private Mono<Void> responseToVoid(ClientResponse r) {
+        return r.statusCode().is2xxSuccessful()
+            ? Mono.empty()
+            : r.bodyToMono(String.class)
+                .switchIfEmpty(Mono.just(""))
+                .flatMap(errorBody -> Mono.error(exceptionFrom(r,  errorBody)));
+    }
+
     /**
     * Factory method to construct an ApiException from a ClientResposne
     *
@@ -153,7 +161,7 @@ public class {{classname}} {
             {{^returnContainer}}.flatMap(r -> responseToSingle(r, {{returnBaseType}}.class)){{/returnContainer}}
         {{/returnType}}
         {{^returnType}}
-            .then()
+            .flatMap(r -> responseToVoid(r))
         {{/returnType}}
     ;
 
