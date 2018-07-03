@@ -47,13 +47,17 @@ public class {{classname}} {
     private <R> Mono<? extends R> responseToSingle(ClientResponse r, Class<R> clazz) {
         return r.statusCode().is2xxSuccessful()
             ? r.bodyToMono(clazz)
-            : r.bodyToMono(String.class).flatMap(errorBody -> Mono.error(exceptionFrom(r,  errorBody)));
+            : r.bodyToMono(String.class)
+                .switchIfEmpty(Mono.just(""))
+                .flatMap(errorBody -> Mono.error(exceptionFrom(r,  errorBody)));
     }
 
     private <R> Flux<? extends R> responseToMany(ClientResponse r, Class<R> clazz) {
         return r.statusCode().is2xxSuccessful()
             ? r.bodyToFlux(clazz)
-            : r.bodyToFlux(String.class).flatMap(errorBody -> Flux.error(exceptionFrom(r, errorBody)));
+            : r.bodyToFlux(String.class)
+                .switchIfEmpty(Mono.just(""))
+                .flatMap(errorBody -> Flux.error(exceptionFrom(r, errorBody)));
     }
 
     private Mono<Void> responseToVoid(ClientResponse r) {
