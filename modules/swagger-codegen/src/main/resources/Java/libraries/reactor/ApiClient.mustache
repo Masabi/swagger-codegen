@@ -3,6 +3,9 @@
 package {{invokerPackage}};
 
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.util.UriBuilder;
@@ -79,7 +82,20 @@ public class ApiClient {
      * Default Constructor for ApiClient
      */
     public ApiClient() {
-        this(WebClient.create());
+        this(createDefaultWebClient());
+
+    }
+
+    private static WebClient createDefaultWebClient() {
+        JSON json = new JSON();
+        ExchangeStrategies strategies = ExchangeStrategies.builder().codecs(configurer -> {
+            configurer.registerDefaults(false);
+            configurer.customCodecs().encoder(new Jackson2JsonEncoder(json.getObjectMapper(), MediaType.APPLICATION_JSON));
+            configurer.customCodecs().decoder(new Jackson2JsonDecoder(json.getObjectMapper(), MediaType.APPLICATION_JSON));
+        }).build();
+        return WebClient.builder()
+            .exchangeStrategies(strategies)
+            .build();
     }
 
       public Mono<ClientResponse> invokeAPI(String path, String method, Map<String, Object> uriVariables, List<Pair> queryParams, Object body, Map<String, String> headerParams, Map<String, Object> formParams, String accept, String contentType, String[] authNames) {
@@ -90,8 +106,11 @@ public class ApiClient {
             .uri(builder -> buildUrl(builder, path, uriVariables, queryParams))
             .headers(headers -> headers.setAll(defaultHeaderMap))
             .headers(headers -> headers.setAll(headerParams))
-            .contentType(MediaType.valueOf(contentType))
-            .accept(MediaType.valueOf(accept));
+            .contentType(MediaType.valueOf(contentType));
+
+        if (accept != null) {
+          request.accept(MediaType.valueOf(accept));
+        }
 
         if (body != null) {
             request.syncBody(body);
