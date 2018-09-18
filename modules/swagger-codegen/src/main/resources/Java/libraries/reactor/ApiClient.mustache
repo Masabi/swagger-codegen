@@ -89,7 +89,6 @@ public class ApiClient {
     private static WebClient createDefaultWebClient() {
         JSON json = new JSON();
         ExchangeStrategies strategies = ExchangeStrategies.builder().codecs(configurer -> {
-            configurer.registerDefaults(false);
             configurer.customCodecs().encoder(new Jackson2JsonEncoder(json.getObjectMapper(), MediaType.APPLICATION_JSON));
             configurer.customCodecs().decoder(new Jackson2JsonDecoder(json.getObjectMapper(), MediaType.APPLICATION_JSON));
         }).build();
