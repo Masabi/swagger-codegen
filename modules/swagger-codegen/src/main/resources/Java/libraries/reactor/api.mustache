@@ -78,6 +78,7 @@ public class {{classname}} {
     private static ApiException exceptionFrom(ClientResponse response, String errorBody) {
         return new ApiException(
             response.statusCode().value(),
+            String.format("API call failed [code: %d, body: %s]", response.statusCode().value(), errorBody),
             response.headers().asHttpHeaders().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())),
             errorBody
         );
